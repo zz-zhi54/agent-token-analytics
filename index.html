@@ -40,6 +40,44 @@
         height: 11rem;
       }
 
+      .trend-chart {
+        display: grid;
+        grid-template-columns: repeat(var(--trend-columns, 1), minmax(0, 1fr));
+        align-items: end;
+        gap: 0.5rem;
+        overflow-x: clip;
+        overflow-y: visible;
+      }
+
+      .trend-column,
+      .trend-value,
+      .trend-date {
+        min-width: 0;
+      }
+
+      .trend-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .trend-value,
+      .trend-date {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .trend-date-short {
+        display: none;
+      }
+
+      .trend-value.is-secondary {
+        visibility: hidden;
+      }
+
       .chart-bar {
         position: relative;
         outline: none;
@@ -71,15 +109,78 @@
         opacity: 1;
       }
 
+      .trend-column:first-child .chart-tooltip {
+        left: -1rem;
+        transform: none;
+      }
+
+      .trend-column:last-child .chart-tooltip {
+        left: auto;
+        right: -1rem;
+        transform: none;
+      }
+
       .soft-grid {
         background-image: linear-gradient(color-mix(in oklab, var(--color-base-content) 5%, transparent) 1px, transparent 1px),
           linear-gradient(90deg, color-mix(in oklab, var(--color-base-content) 5%, transparent) 1px, transparent 1px);
         background-size: 1.5rem 1.5rem;
       }
 
+      @media (max-width: 1024px) {
+        .trend-chart {
+          gap: 0.25rem;
+        }
+
+        .trend-date.is-secondary {
+          visibility: hidden;
+        }
+      }
+
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .trend-column:nth-child(-n + 4) .chart-tooltip {
+          left: -1rem;
+          transform: none;
+        }
+
+        .trend-column:nth-last-child(-n + 4) .chart-tooltip {
+          left: auto;
+          right: -1rem;
+          transform: none;
+        }
+      }
+
       @media (max-width: 640px) {
         .conversation-scroll {
           max-height: 62vh;
+        }
+
+        .trend-value {
+          display: none;
+        }
+
+        .trend-date {
+          max-width: none;
+          overflow: visible;
+          text-overflow: clip;
+        }
+
+        .trend-date-full {
+          display: none;
+        }
+
+        .trend-date-short {
+          display: inline;
+        }
+
+        .trend-column:nth-child(-n + 11) .chart-tooltip {
+          left: -1rem;
+          transform: none;
+        }
+
+        .trend-column:nth-last-child(-n + 11) .chart-tooltip {
+          left: auto;
+          right: -1rem;
+          transform: none;
         }
       }
     </style>
@@ -247,9 +348,9 @@
                   <h3 class="card-title" data-i18n="tokenTrend">Token 趋势</h3>
                   <p class="mt-1 text-sm text-base-content/55" data-i18n="tokenTrendDesc">最近 30 个有记录日期，总高度按当天总 Token 比例显示。</p>
                 </div>
-                <span class="text-xs text-base-content/45" data-i18n="daily">按日</span>
+                <span class="whitespace-nowrap text-xs text-base-content/45" data-i18n="daily">按日</span>
               </div>
-              <div id="trendChart" class="soft-grid mt-5 flex min-h-52 items-end gap-2 overflow-x-auto rounded-box p-4"></div>
+              <div id="trendChart" class="trend-chart soft-grid mt-5 min-h-52 rounded-box p-4"></div>
             </div>
           </section>
 
@@ -413,12 +514,19 @@
             <h3 id="detailTitle" class="mt-1 truncate text-xl font-bold" data-i18n="chatDetails">对话详情</h3>
             <p id="detailMeta" class="mt-1 break-all text-sm text-base-content/55"></p>
           </div>
-          <div class="flex items-center gap-2">
-            <select id="detailMode" class="select select-sm" aria-label="对话分支显示模式">
-              <option value="active" data-i18n="activeBranch">当前分支</option>
-              <option value="all" data-i18n="allRecords">全部记录</option>
-            </select>
-            <form method="dialog"><button class="btn btn-sm" data-i18n="close">关闭</button></form>
+          <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:shrink-0">
+            <div id="detailMode" class="join" role="group" aria-label="对话分支显示模式" data-mode="active">
+              <button type="button" class="detail-mode-button join-item btn btn-sm btn-active" data-mode="active" aria-pressed="true" data-i18n="activeBranch">当前分支</button>
+              <button type="button" class="detail-mode-button join-item btn btn-sm btn-ghost" data-mode="all" aria-pressed="false" data-i18n="allRecords">全部记录</button>
+            </div>
+            <form method="dialog">
+              <button id="detailCloseButton" type="submit" class="btn btn-circle btn-ghost btn-sm" aria-label="关闭" title="关闭">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+                <span class="sr-only" data-i18n="close">关闭</span>
+              </button>
+            </form>
           </div>
         </div>
         <div id="detailSummary" class="rounded-box bg-base-200 px-4 py-3 text-sm text-base-content/70"></div>
@@ -477,6 +585,7 @@
         detailTitle: document.querySelector("#detailTitle"),
         detailMeta: document.querySelector("#detailMeta"),
         detailMode: document.querySelector("#detailMode"),
+        detailCloseButton: document.querySelector("#detailCloseButton"),
         detailSummary: document.querySelector("#detailSummary"),
         conversationBody: document.querySelector("#conversationBody"),
       };
@@ -803,6 +912,8 @@
         document.querySelector('meta[name="description"]').content = t("pageDescription");
         elements.languageSelect.value = state.language;
         elements.detailMode.setAttribute("aria-label", t("branchMode"));
+        elements.detailCloseButton.setAttribute("aria-label", t("close"));
+        elements.detailCloseButton.setAttribute("title", t("close"));
         document.querySelectorAll("[data-i18n]").forEach((element) => {
           element.textContent = t(element.dataset.i18n);
         });
@@ -1290,18 +1401,22 @@
 
       function renderTrend(rows) {
         if (!rows.length) {
+          elements.trendChart.style.removeProperty("--trend-columns");
           elements.trendChart.innerHTML = `<div class="m-auto text-sm text-base-content/45">${t("noTrendData")}</div>`;
           return;
         }
         const chartRows = rows.slice(0, 30).reverse();
         const max = Math.max(...chartRows.map((row) => row.totals.total), 1);
+        elements.trendChart.style.setProperty("--trend-columns", chartRows.length);
         elements.trendChart.innerHTML = chartRows
-          .map((row) => {
+          .map((row, index) => {
             const height = row.totals.total ? Math.max((row.totals.total / max) * 100, 4) : 2;
             const label = `${row.key}：${formatTokens(row.totals.total)} Token`;
-            return `<div class="flex min-w-12 flex-1 flex-col items-center gap-1">
-              <span class="min-h-5 whitespace-nowrap text-[0.65rem] font-semibold text-info">${formatTokens(row.totals.total)}</span>
-              <div class="bar-track flex w-full items-end rounded-box bg-base-200 p-1">
+            const showValue = chartRows.length <= 12 || index === 0 || index === chartRows.length - 1 || index % 5 === 0;
+            const showDate = chartRows.length <= 20 || index === 0 || index === chartRows.length - 1 || index % 5 === 0;
+            return `<div class="trend-column">
+              <span class="trend-value min-h-5 text-[0.65rem] font-semibold text-info ${showValue ? "" : "is-secondary"}" title="${escapeHtml(label)}">${formatTokens(row.totals.total)}</span>
+              <div class="bar-track flex w-full items-end rounded-box bg-base-200 p-0.5">
                 <div class="chart-bar w-full rounded-selector bg-info transition-all" tabindex="0" aria-label="${escapeHtml(label)}" style="height: ${height}%">
                   <div class="chart-tooltip">
                     <div class="font-semibold text-info">${escapeHtml(row.key)}</div>
@@ -1311,7 +1426,7 @@
                   </div>
                 </div>
               </div>
-              <span class="text-[0.65rem] text-base-content/55">${escapeHtml(row.key.slice(5))}</span>
+              <span class="trend-date text-[0.65rem] text-base-content/55 ${showDate ? "" : "is-secondary"}"><span class="trend-date-full">${escapeHtml(row.key.slice(5))}</span><span class="trend-date-short">${escapeHtml(row.key.slice(-2))}</span></span>
             </div>`;
           })
           .join("");
@@ -1552,9 +1667,20 @@
         return path.reverse();
       }
 
+      function setDetailMode(mode) {
+        const nextMode = mode === "all" ? "all" : "active";
+        elements.detailMode.dataset.mode = nextMode;
+        elements.detailMode.querySelectorAll(".detail-mode-button").forEach((button) => {
+          const isActive = button.dataset.mode === nextMode;
+          button.classList.toggle("btn-active", isActive);
+          button.classList.toggle("btn-ghost", !isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        });
+      }
+
       function renderDetailConversation() {
         if (!state.detailData) return;
-        const entries = elements.detailMode.value === "active" ? activeBranchEntries(state.detailData.entries || []) : state.detailData.entries || [];
+        const entries = elements.detailMode.dataset.mode === "active" ? activeBranchEntries(state.detailData.entries || []) : state.detailData.entries || [];
         elements.conversationBody.innerHTML = entries.length
           ? entries.map(renderEntry).join("")
           : `<div class="py-16 text-center text-base-content/45">${t("noDisplayableMessages")}</div>`;
@@ -1666,12 +1792,18 @@
         setActiveRange("all");
         refreshDashboard();
       });
-      elements.detailMode.addEventListener("change", renderDetailConversation);
+      elements.detailMode.addEventListener("click", (event) => {
+        const button = event.target.closest(".detail-mode-button");
+        if (!button) return;
+        setDetailMode(button.dataset.mode);
+        renderDetailConversation();
+      });
       elements.sessionTableBody.addEventListener("click", (event) => {
         const button = event.target.closest(".open-session");
         if (button) openSession(Number(button.dataset.sessionIndex));
       });
 
+      setDetailMode("active");
       applyLanguage(state.language);
     </script>
   </body>
