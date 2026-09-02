@@ -16,13 +16,7 @@ A standalone HTML dashboard for analyzing Pi session token usage and cost.
 
 ## Run
 
-You can open `index.html` directly, or serve it with a local static server:
-
-```bash
-python3 -m http.server 4173
-```
-
-Then visit <http://127.0.0.1:4173>.
+No npm, build step, or local server is required. Open `index.html` directly.
 
 Choose the `~/.pi/agent/sessions` directory in the page and click **Calculate**. All data is processed locally in the browser and is never uploaded.
 
