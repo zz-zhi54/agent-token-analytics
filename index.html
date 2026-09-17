@@ -3,10 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="在本地分析 Pi JSONL 会话中的 Token 使用量与费用" />
-    <title>Pi Token Analytics</title>
+    <meta name="description" content="在本地分析 Agent 工具会话中的 Token 使用量与费用" />
+    <title>Agent Token Analytics</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js"></script>
     <style>
       :root {
         color-scheme: dark;
@@ -189,13 +190,13 @@
     <header class="mx-auto max-w-[1800px] px-4 pb-8 pt-8 sm:px-6 lg:px-8">
       <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-info" data-i18n="eyebrow">本地分析 · Pi 会话</p>
-          <h1 class="text-4xl font-black tracking-tight sm:text-5xl">Pi Token Analytics</h1>
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-info" data-i18n="eyebrow">本地分析 · Agent 工具会话</p>
+          <h1 class="text-4xl font-black tracking-tight sm:text-5xl">Agent Token Analytics</h1>
           <p class="mt-3 max-w-2xl text-base-content/65 sm:text-lg">
-            <span data-i18n="headerSubtitleBefore">汇总</span> <code class="rounded bg-base-300 px-1.5 py-0.5 text-sm">~/.pi/agent/sessions</code> <span data-i18n="headerSubtitleAfter">下所有项目的会话消耗，并随时查看原始对话。</span>
+            <span data-i18n="headerSubtitleBefore">汇总</span> <code class="rounded bg-base-300 px-1.5 py-0.5 text-sm">~/.pi/agent/sessions</code> <span data-i18n="headerSubtitleAnd">和</span> <code class="rounded bg-base-300 px-1.5 py-0.5 text-sm">~/.dsh/sessions</code> <span data-i18n="headerSubtitleAfter">下所有项目的会话消耗，并随时查看原始对话。</span>
           </p>
-          <a class="link link-info link-hover mt-4 inline-block text-lg font-semibold sm:text-xl" href="https://github.com/zz-zhi54/pi-token-analytics" target="_blank" rel="noopener noreferrer">
-            <span data-i18n="sourceCode">项目源码：</span>github.com/zz-zhi54/pi-token-analytics
+          <a class="link link-info link-hover mt-4 inline-block text-lg font-semibold sm:text-xl" href="https://github.com/zz-zhi54/agent-token-analytics" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="sourceCode">项目源码：</span>github.com/zz-zhi54/agent-token-analytics
           </a>
         </div>
         <div class="flex flex-wrap items-end justify-end gap-3">
@@ -226,7 +227,7 @@
             <div class="rounded-box bg-base-200 p-4">
               <div class="text-sm font-semibold" data-i18n="dataSource">数据来源</div>
               <p class="mt-2 text-sm leading-6 text-base-content/65" data-i18n="dataSourceDesc">
-                读取 Pi 持久化的 JSONL 会话文件。每一行都是一个 session entry，页面不根据文字长度估算 Token。
+                读取 Pi 或 DSH 持久化的 JSONL 会话文件（DSH 也支持 .jsonl.zstd）。每一行都是一条会话记录，页面不根据文字长度估算 Token。
               </p>
             </div>
             <div class="rounded-box bg-base-200 p-4">
@@ -234,7 +235,7 @@
               <p class="method-formula mt-2 rounded-field bg-base-300 px-3 py-2 font-mono text-sm leading-6 text-info">
                 total = input + output + cacheRead + cacheWrite
               </p>
-              <p class="mt-2 text-sm leading-6 text-base-content/65" data-i18n="reasoningNote">reasoning 已包含在 output 中，不会再次相加。</p>
+              <p class="mt-2 text-sm leading-6 text-base-content/65" data-i18n="reasoningNote">reasoning 已包含在 output 中，不会再次相加；DSH 若提供有效 totalTokens 则优先使用。</p>
             </div>
             <div class="rounded-box bg-base-200 p-4">
               <div class="text-sm font-semibold" data-i18n="costAndTime">费用与时间</div>
@@ -255,18 +256,18 @@
           <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-info" data-i18n="step01">步骤 01</p>
-              <h2 class="card-title mt-1 text-2xl" data-i18n="chooseSessionDirectory">选择 Pi 会话目录</h2>
-              <p class="mt-2 text-sm text-base-content/60"><span data-i18n="chooseDirectoryDescBefore">建议选择整个</span> <code>~/.pi/agent/sessions</code><span data-i18n="chooseDirectoryDescAfter">，这样可以覆盖所有项目。</span></p>
+              <h2 class="card-title mt-1 text-2xl" data-i18n="chooseSessionDirectory">选择 Agent 会话目录</h2>
+              <p class="mt-2 text-sm text-base-content/60"><span data-i18n="chooseDirectoryDescBefore">建议选择整个</span> <code>~/.pi/agent/sessions</code> 或 <code>~/.dsh/sessions</code><span data-i18n="chooseDirectoryDescAfter">，这样可以覆盖所有项目。</span></p>
             </div>
-            <div class="text-sm text-base-content/55" data-i18n="multipleJsonl">支持多选 JSONL 文件</div>
+            <div class="text-sm text-base-content/55" data-i18n="multipleJsonl">支持多选 JSONL / .zstd 文件</div>
           </div>
 
           <input id="directoryPicker" type="file" webkitdirectory directory multiple class="hidden" />
-          <input id="filePicker" type="file" accept=".jsonl,application/json" multiple class="hidden" />
+          <input id="filePicker" type="file" accept=".json,.jsonl,.jsonl.zstd,.jsonl.zst,application/json,application/zstd,application/octet-stream" multiple class="hidden" />
 
           <div class="flex flex-wrap gap-3">
-            <button id="chooseDirectoryButton" class="btn" data-i18n="chooseDirectory">选择 sessions 目录</button>
-            <button id="chooseFilesButton" class="btn" data-i18n="addJsonl">添加 JSONL 文件</button>
+            <button id="chooseDirectoryButton" class="btn" data-i18n="chooseDirectory">选择会话目录</button>
+            <button id="chooseFilesButton" class="btn" data-i18n="addJsonl">添加 JSONL / .zstd 文件</button>
             <button id="calculateButton" class="btn btn-primary" disabled data-i18n="calculate">开始计算</button>
           </div>
 
@@ -546,6 +547,8 @@
         detailSession: null,
         detailData: null,
         detailRequestId: 0,
+        pricingCatalog: null,
+        pricingPromise: null,
         language: localStorage.getItem("pi-token-language") || "zh",
         status: null,
       };
@@ -595,9 +598,10 @@
 
       const translations = {
         zh: {
-          pageDescription: "在本地分析 Pi JSONL 会话中的 Token 使用量与费用",
-          eyebrow: "本地分析 · Pi 会话",
+          pageDescription: "在本地分析 Agent 工具会话中的 Token 使用量与费用",
+          eyebrow: "本地分析 · Agent 工具会话",
           headerSubtitleBefore: "汇总",
+          headerSubtitleAnd: "和",
           headerSubtitleAfter: "下所有项目的会话消耗，并随时查看原始对话。",
           localOnly: "只在浏览器本地处理",
           noUpload: "不会上传会话、命令输出或项目内容",
@@ -606,20 +610,20 @@
           howItWorks: "工作方式",
           accountingTitle: "统计口径",
           dataSource: "数据来源",
-          dataSourceDesc: "读取 Pi 持久化的 JSONL 会话文件。每一行都是一个 session entry，页面不根据文字长度估算 Token。",
+          dataSourceDesc: "读取 Pi 或 DSH 持久化的 JSONL 会话文件（DSH 也支持 .jsonl.zstd）。每一行都是一条会话记录，页面不根据文字长度估算 Token。",
           tokenTypes: "四类 Token",
-          reasoningNote: "reasoning 已包含在 output 中，不会再次相加。",
+          reasoningNote: "reasoning 已包含在 output 中，不会再次相加；DSH 若提供有效 totalTokens 则优先使用。",
           costAndTime: "费用与时间",
-          costAndTimeBefore: "费用直接读取",
-          costAndTimeAfter: "；按每次记录的时间归入天和月，默认使用本地时区。",
-          accountingNote: "Pi 的 session 统计会包含已经发生过的历史分支、压缩和摘要消耗。页面会将 assistant、toolResult、compaction、branch_summary 中保存的 usage 一并统计；缺少 usage 的记录不会被猜测，并会在结果中提示。",
+          costAndTimeBefore: "费用优先读取",
+          costAndTimeAfter: "；DSH 未保存费用时按 models.dev 价格估算；无法匹配价格时显示 0；按每次记录的时间归入天和月，默认使用本地时区。",
+          accountingNote: "页面同时支持 Pi 与 DSH 会话。Pi 会将 assistant、toolResult、compaction、branch_summary 中保存的 usage 计入统计；DSH 会将 assistant/message 与重试用的 assistant/attempt（每个 attempt 只读取最后一条 usage）计入统计。缺少 usage 的记录不会被猜测，并会在结果中提示。",
           step01: "步骤 01",
-          chooseSessionDirectory: "选择 Pi 会话目录",
+          chooseSessionDirectory: "选择 Agent 会话目录",
           chooseDirectoryDescBefore: "建议选择整个",
           chooseDirectoryDescAfter: "，这样可以覆盖所有项目。",
-          multipleJsonl: "支持多选 JSONL 文件",
-          chooseDirectory: "选择 sessions 目录",
-          addJsonl: "添加 JSONL 文件",
+          multipleJsonl: "支持多选 JSONL / .zstd 文件",
+          chooseDirectory: "选择会话目录",
+          addJsonl: "添加 JSONL / .zstd 文件",
           calculate: "开始计算",
           noFiles: "尚未选择文件",
           readyToRead: "准备读取",
@@ -673,7 +677,7 @@
           branchMode: "对话分支显示模式",
           close: "关闭",
           kpiTotal: "总 Token",
-          kpiTotalDesc: "四类 Token 相加",
+          kpiTotalDesc: "四类 Token 相加（DSH 优先 totalTokens）",
           kpiInput: "输入 Token",
           kpiInputDesc: "usage.input",
           kpiOutput: "输出 Token",
@@ -683,11 +687,11 @@
           kpiCacheWrite: "Cache Write",
           kpiCacheWriteDesc: "usage.cacheWrite",
           kpiCalls: "LLM 调用",
-          kpiCallsDesc: "assistant 消息数量",
+          kpiCallsDesc: "assistant 请求数量",
           kpiToolCalls: "Tool Calls",
           kpiToolCallsDesc: "assistant 中的工具调用",
           kpiCost: "费用（USD）",
-          kpiCostDesc: "usage.cost.total",
+          kpiCostDesc: "usage.cost.total；DSH 使用 models.dev 估算",
           noRecords: "暂无记录",
           noDailyRecords: "暂无每日记录",
           noMonthlyRecords: "暂无月度记录",
@@ -707,6 +711,9 @@
           cacheWriteLabel: "Cache Write",
           totalLabel: "总量",
           assistant: "Assistant",
+          assistantAttempt: "Assistant attempt",
+          systemMessage: "System message",
+          requestHeader: "Request header: {route}",
           you: "你",
           thinking: "思考过程",
           toolCall: "工具调用：{name}",
@@ -735,6 +742,9 @@
           filesAdded: "已添加 {count} 个文件。",
           noJsonl: "没有发现 JSONL 文件。",
           readingFile: "正在读取 {current}/{total}：{file}",
+          loadingPricing: "正在加载 models.dev 价格目录…",
+          pricingUnavailable: "无法加载 models.dev 价格目录，DSH 费用暂显示为 0。",
+          pricingUnknown: "models.dev 未找到 {count} 个 DSH provider/model，相关费用显示为 0。",
           complete: "完成：读取 {count} 个有效 session。",
           duplicateSession: "跳过重复 session：{id}（{file}）",
           malformedLines: "{file} 有 {count} 行 JSON 无法解析。",
@@ -743,13 +753,15 @@
           unknownProject: "未知项目",
           unknownTime: "未知时间",
           invalidSessionHeader: "找不到有效的 session header",
+          zstdUnavailable: "无法解压 .zstd 文件：Zstandard 解码器未加载，请检查网络后重试。",
           emptyResult: "空结果",
           usageLine: "输入 {input} · 输出 {output} · Cache Read {cacheRead} · Cache Write {cacheWrite} · 总量 {total} · {cost}",
         },
         en: {
-          pageDescription: "Analyze Pi JSONL session token usage and cost locally",
-          eyebrow: "Local analytics · Pi sessions",
+          pageDescription: "Analyze Agent tool session token usage and cost locally",
+          eyebrow: "Local analytics · Agent tools",
           headerSubtitleBefore: "Aggregate usage across all projects under",
+          headerSubtitleAnd: "and",
           headerSubtitleAfter: "and inspect the original conversations.",
           localOnly: "Processed locally in your browser",
           noUpload: "Sessions, command output, and project content never leave this page",
@@ -758,20 +770,20 @@
           howItWorks: "How it works",
           accountingTitle: "Accounting rules",
           dataSource: "Data source",
-          dataSourceDesc: "Reads Pi's persisted JSONL session files. Each line is a session entry; tokens are never estimated from text length.",
+          dataSourceDesc: "Reads Pi or DSH persisted JSONL session files (including DSH .jsonl.zstd files). Each line is a session record; tokens are never estimated from text length.",
           tokenTypes: "Four token types",
-          reasoningNote: "Reasoning is already included in output and is not added again.",
+          reasoningNote: "Reasoning is already included in output and is not added again; valid DSH totalTokens takes precedence when present.",
           costAndTime: "Cost and time",
-          costAndTimeBefore: "Cost is read directly from",
-          costAndTimeAfter: "; records are grouped by day and month using the local timezone by default.",
-          accountingNote: "Pi session statistics include usage from completed branches, compaction, and summaries. Usage saved in assistant, toolResult, compaction, and branch_summary entries is aggregated; missing usage is never guessed and is reported in the results.",
+          costAndTimeBefore: "Cost is read first from",
+          costAndTimeAfter: "; DSH sessions estimate missing costs from models.dev and show 0 when no price matches; records are grouped by day and month using the local timezone by default.",
+          accountingNote: "This page supports both Pi and DSH sessions. Pi aggregates usage from assistant, toolResult, compaction, and branch_summary entries; DSH aggregates assistant/message and retry-only assistant/attempt records, taking only the last usage chunk per attempt. Missing usage is never guessed and is reported in the results.",
           step01: "STEP 01",
-          chooseSessionDirectory: "Choose the Pi session directory",
+          chooseSessionDirectory: "Choose the Agent session directory",
           chooseDirectoryDescBefore: "Select the entire",
           chooseDirectoryDescAfter: "directory to cover all projects.",
-          multipleJsonl: "Multiple JSONL files supported",
-          chooseDirectory: "Choose sessions directory",
-          addJsonl: "Add JSONL files",
+          multipleJsonl: "Multiple JSONL / .zstd files supported",
+          chooseDirectory: "Choose session directory",
+          addJsonl: "Add JSONL / .zstd files",
           calculate: "Calculate",
           noFiles: "No files selected",
           readyToRead: "Ready to read",
@@ -825,7 +837,7 @@
           branchMode: "Conversation branch display mode",
           close: "Close",
           kpiTotal: "Total tokens",
-          kpiTotalDesc: "Sum of four token types",
+          kpiTotalDesc: "Sum of four types (DSH prefers totalTokens)",
           kpiInput: "Input tokens",
           kpiInputDesc: "usage.input",
           kpiOutput: "Output tokens",
@@ -835,11 +847,11 @@
           kpiCacheWrite: "Cache Write",
           kpiCacheWriteDesc: "usage.cacheWrite",
           kpiCalls: "LLM calls",
-          kpiCallsDesc: "Assistant message count",
+          kpiCallsDesc: "Assistant request count",
           kpiToolCalls: "Tool calls",
           kpiToolCallsDesc: "Tool calls inside assistant messages",
           kpiCost: "Cost (USD)",
-          kpiCostDesc: "usage.cost.total",
+          kpiCostDesc: "usage.cost.total; DSH uses models.dev",
           noRecords: "No records",
           noDailyRecords: "No daily records",
           noMonthlyRecords: "No monthly records",
@@ -859,6 +871,9 @@
           cacheWriteLabel: "Cache Write",
           totalLabel: "Total",
           assistant: "Assistant",
+          assistantAttempt: "Assistant attempt",
+          systemMessage: "System message",
+          requestHeader: "Request header: {route}",
           you: "You",
           thinking: "Thinking",
           toolCall: "Tool call: {name}",
@@ -887,6 +902,9 @@
           filesAdded: "{count} file(s) added.",
           noJsonl: "No JSONL files found.",
           readingFile: "Reading {current}/{total}: {file}",
+          loadingPricing: "Loading the models.dev pricing catalog…",
+          pricingUnavailable: "Unable to load models.dev pricing; DSH costs are temporarily shown as 0.",
+          pricingUnknown: "models.dev has no price for {count} DSH provider/model pair(s); those costs are shown as 0.",
           complete: "Done: read {count} valid session(s).",
           duplicateSession: "Skipped duplicate session: {id} ({file})",
           malformedLines: "{file} contains {count} invalid JSON line(s).",
@@ -895,6 +913,7 @@
           unknownProject: "Unknown project",
           unknownTime: "Unknown time",
           invalidSessionHeader: "No valid session header found",
+          zstdUnavailable: "Unable to decompress .zstd: the Zstandard decoder did not load. Check the network and try again.",
           emptyResult: "Empty result",
           usageLine: "Input {input} · Output {output} · Cache Read {cacheRead} · Cache Write {cacheWrite} · Total {total} · {cost}",
         },
@@ -913,7 +932,7 @@
         state.language = language === "en" ? "en" : "zh";
         localStorage.setItem("pi-token-language", state.language);
         document.documentElement.lang = state.language === "en" ? "en" : "zh-CN";
-        document.title = "Pi Token Analytics";
+        document.title = "Agent Token Analytics";
         document.querySelector('meta[name="description"]').content = t("pageDescription");
         elements.languageSelect.value = state.language;
         elements.detailMode.setAttribute("aria-label", t("branchMode"));
@@ -954,8 +973,37 @@
         return typeof value === "number" && Number.isFinite(value) ? value : 0;
       }
 
+      function tokenCount(value) {
+        return Number.isSafeInteger(value) && value >= 0 ? value : null;
+      }
+
       function normalizeUsage(usage) {
         if (!usage || typeof usage !== "object") return null;
+
+        const hasDshUsageField = ["inputTokens", "outputTokens", "cacheReadTokens", "cacheWriteTokens", "totalTokens"].some((key) =>
+          Object.prototype.hasOwnProperty.call(usage, key),
+        );
+        if (hasDshUsageField) {
+          const input = tokenCount(usage.inputTokens);
+          const output = tokenCount(usage.outputTokens);
+          if (input === null || output === null) return null;
+          const cacheRead = tokenCount(usage.cacheReadTokens) ?? 0;
+          const cacheWrite = tokenCount(usage.cacheWriteTokens) ?? 0;
+          const suppliedTotal = tokenCount(usage.totalTokens);
+          const costValue = usage.cost && typeof usage.cost === "object" ? usage.cost.total : usage.cost;
+          const cost = numeric(costValue);
+          const costProvided = typeof costValue === "number" && Number.isFinite(costValue) && costValue >= 0;
+          return {
+            input,
+            output,
+            cacheRead,
+            cacheWrite,
+            total: suppliedTotal ?? input + output + cacheRead + cacheWrite,
+            cost,
+            costProvided,
+          };
+        }
+
         const hasUsageField = ["input", "output", "cacheRead", "cacheWrite", "totalTokens", "cost"].some((key) =>
           Object.prototype.hasOwnProperty.call(usage, key),
         );
@@ -980,9 +1028,19 @@
         return [file.webkitRelativePath || file.name, file.size, file.lastModified].join("::");
       }
 
+      function isZstdFile(file) {
+        const name = file.name.toLowerCase();
+        return name.endsWith(".jsonl.zstd") || name.endsWith(".jsonl.zst") || name.endsWith(".zstd") || name.endsWith(".zst");
+      }
+
       function isSessionFile(file) {
         const name = file.name.toLowerCase();
-        return name.endsWith(".jsonl") || name.endsWith(".json");
+        return name.endsWith(".jsonl") || name.endsWith(".json") || isZstdFile(file);
+      }
+
+      function sessionFilePriority(file) {
+        const match = file.name.match(/\.v(\d+)\.jsonl(?:\.zst(?:d)?)?$/i);
+        return match ? Number(match[1]) : 0;
       }
 
       function escapeHtml(value) {
@@ -1006,8 +1064,8 @@
           .map((part) => {
             if (typeof part === "string") return part;
             if (!part || typeof part !== "object") return "";
-            if (part.type === "text" || part.type === "thinking") return part.text || "";
-            if (part.type === "toolCall") return `[${t("toolCall", { name: part.name || t("unknownTool") })}]`;
+            if (part.type === "text" || part.type === "thinking" || part.type === "reasoning") return part.text || part.thinking || "";
+            if (part.type === "toolCall" || part.type === "tool-call") return `[${t("toolCall", { name: part.name || t("unknownTool") })}]`;
             if (part.type === "image") return "[Image]";
             return "";
           })
@@ -1028,7 +1086,7 @@
       }
 
       function entryTimestamp(entry, headerTimestamp) {
-        return toTimestamp(entry?.timestamp) ?? toTimestamp(entry?.message?.timestamp) ?? headerTimestamp ?? Date.now();
+        return toTimestamp(entry?.timestamp) ?? toTimestamp(entry?.time) ?? toTimestamp(entry?.message?.timestamp) ?? toTimestamp(entry?.data?.message?.timestamp) ?? headerTimestamp ?? Date.now();
       }
 
       function getDateParts(timestamp) {
@@ -1090,6 +1148,95 @@
         return `$${numeric(value).toFixed(4)}`;
       }
 
+      const MODELS_DEV_URL = "https://models.dev/api.json";
+      const PRICING_PROVIDER_ALIASES = {
+        "openai-codex": ["openai", "github-copilot"],
+        "zai-coding-cn": ["zai", "zai-coding-plan"],
+      };
+
+      function pricingNumber(value) {
+        return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+      }
+
+      function modelPricingFor(provider, modelId) {
+        const providers = [provider, ...(PRICING_PROVIDER_ALIASES[provider] || [])];
+        for (const providerId of providers) {
+          const model = state.pricingCatalog?.[providerId]?.models?.[modelId];
+          if (model?.cost && typeof model.cost === "object") return model.cost;
+        }
+        return null;
+      }
+
+      function selectPricingTier(pricing, inputTokens) {
+        const candidates = [];
+        if (pricing.context_over_200k && typeof pricing.context_over_200k === "object" && inputTokens > 200000) {
+          candidates.push({ threshold: 200000, cost: pricing.context_over_200k });
+        }
+        for (const tier of Array.isArray(pricing.tiers) ? pricing.tiers : []) {
+          const threshold = pricingNumber(tier?.tier?.size);
+          if (threshold !== null && inputTokens >= threshold) {
+            candidates.push({ threshold, cost: tier });
+          }
+        }
+        candidates.sort((a, b) => b.threshold - a.threshold);
+        return candidates[0]?.cost || pricing;
+      }
+
+      function calculateDshCost(provider, modelId, usage) {
+        const pricing = modelPricingFor(provider, modelId);
+        if (!pricing) return null;
+        const selected = selectPricingTier(pricing, usage.input);
+        const input = pricingNumber(selected.input);
+        const output = pricingNumber(selected.output);
+        if (input === null || output === null) return null;
+        const cacheRead = pricingNumber(selected.cache_read ?? selected.cacheRead) ?? 0;
+        const cacheWrite = pricingNumber(selected.cache_write ?? selected.cacheWrite) ?? 0;
+        // models.dev prices are USD per million tokens.
+        return (usage.input * input + usage.output * output + usage.cacheRead * cacheRead + usage.cacheWrite * cacheWrite) / 1000000;
+      }
+
+      async function loadPricingCatalog() {
+        if (state.pricingCatalog) return state.pricingCatalog;
+        if (!state.pricingPromise) {
+          state.pricingPromise = fetch(MODELS_DEV_URL)
+            .then((response) => {
+              if (!response.ok) throw new Error(`models.dev HTTP ${response.status}`);
+              return response.json();
+            })
+            .then((catalog) => {
+              if (!catalog || typeof catalog !== "object") throw new Error("Invalid models.dev response");
+              state.pricingCatalog = catalog;
+              return catalog;
+            })
+            .catch((error) => {
+              state.pricingPromise = null;
+              throw error;
+            });
+        }
+        return state.pricingPromise;
+      }
+
+      function applyDshPricing(sessions) {
+        const unknownModels = new Set();
+        for (const session of sessions) {
+          if (session.format !== "dsh") continue;
+          const totals = createTotals();
+          for (const event of session.events) {
+            if (event.kind === "assistant" && event.hasUsage && !event.usage.costProvided) {
+              const cost = calculateDshCost(event.provider, event.modelId, event.usage);
+              if (cost === null) {
+                unknownModels.add(`${event.provider}/${event.modelId}`);
+              } else {
+                event.usage = { ...event.usage, cost };
+              }
+            }
+            addTotals(totals, event.usage);
+          }
+          session.totals = totals;
+        }
+        return unknownModels;
+      }
+
       function formatDateTime(timestamp) {
         if (!timestamp) return t("unknownTime");
         const options = { dateStyle: "medium", timeStyle: "short" };
@@ -1124,13 +1271,214 @@
         const incoming = Array.from(fileList || []).filter(isSessionFile);
         const filesByKey = new Map(state.files.map((file) => [fileKey(file), file]));
         for (const file of incoming) filesByKey.set(fileKey(file), file);
-        state.files = Array.from(filesByKey.values());
+        state.files = Array.from(filesByKey.values()).sort((a, b) => sessionFilePriority(b) - sessionFilePriority(a));
         updateSelectionSummary();
         setStatus(incoming.length ? "filesAdded" : "noJsonl", { count: formatTokens(incoming.length) }, incoming.length ? "text-success" : "text-warning");
       }
 
+      function isDshSessionHeader(header) {
+        return Boolean(
+          header &&
+          (Object.prototype.hasOwnProperty.call(header, "createdAt") ||
+            (Number.isInteger(header.version) && header.version >= 2 && !Object.prototype.hasOwnProperty.call(header, "timestamp"))),
+        );
+      }
+
+      function dshRouteFromHeader(header) {
+        const config = header?.config;
+        if (!config || typeof config !== "object") return null;
+        const provider = typeof config.provider === "string" && config.provider ? config.provider : null;
+        const model = typeof config.model === "string" && config.model ? config.model : null;
+        return provider && model ? { provider, model } : null;
+      }
+
+      function dshRouteFromMessage(message) {
+        const source = message?.source;
+        if (!source || typeof source !== "object" || source.kind !== "model") return null;
+        const provider = typeof source.provider === "string" && source.provider ? source.provider : null;
+        const model = typeof source.model === "string" && source.model ? source.model : null;
+        return provider && model ? { provider, model } : null;
+      }
+
+      function dshRouteFromRecord(entry) {
+        const data = entry?.data;
+        if (!data || typeof data !== "object") return null;
+        if (entry.type === "request/header") return dshRouteFromHeader(data.header);
+        if (entry.type === "model/selection" || entry.type === "request/context") {
+          const provider = typeof data.provider === "string" && data.provider ? data.provider : null;
+          const model = typeof data.model === "string" && data.model ? data.model : null;
+          return provider && model ? { provider, model } : null;
+        }
+        return null;
+      }
+
+      function dshUsageFromAttempt(stream) {
+        if (!Array.isArray(stream)) return null;
+        let latest = null;
+        for (const record of stream) {
+          const chunk = record?.chunk;
+          if (chunk?.type === "usage") latest = chunk.usage;
+        }
+        return normalizeUsage(latest);
+      }
+
+      function dshToolCallCount(message) {
+        const content = Array.isArray(message?.content) ? message.content : [];
+        return content.filter((part) => part?.type === "tool-call" || part?.type === "toolCall").length;
+      }
+
+      function dshStreamToolCallCount(stream) {
+        if (!Array.isArray(stream)) return 0;
+        return stream.filter((record) => {
+          const chunk = record?.chunk;
+          return chunk?.type === "block-start" && (chunk.blockType === "tool-call" || chunk.blockType === "toolCall");
+        }).length;
+      }
+
+      function dshStepKey(entry) {
+        const data = entry?.data || {};
+        return `${data.turn ?? ""}/${data.step ?? ""}`;
+      }
+
+      function parseDshSession(header, entries, file, text, malformedLines, includeEntries) {
+        const headerTimestamp = toTimestamp(header.createdAt);
+        const events = [];
+        const firstUser = entries.find((entry) => entry.type === "user/message");
+        const hasToolCallRecords = entries.some((entry) => entry.type === "tool/call");
+        const assistantEventsByStep = new Map();
+        let currentRoute = null;
+        let sessionName = "";
+        let firstAt = headerTimestamp;
+        let lastAt = headerTimestamp;
+        let totalMessages = 0;
+        let userMessages = 0;
+        let assistantMessages = 0;
+        let toolResults = 0;
+        let toolCalls = 0;
+        let missingUsage = 0;
+
+        for (const entry of entries) {
+          const timestamp = entryTimestamp(entry, headerTimestamp);
+          firstAt = firstAt === null ? timestamp : Math.min(firstAt, timestamp);
+          lastAt = lastAt === null ? timestamp : Math.max(lastAt, timestamp);
+
+          if (entry.type === "session/title" && typeof entry.data?.title === "string" && entry.data.title.trim()) {
+            sessionName = entry.data.title.trim();
+          }
+
+          const recordRoute = dshRouteFromRecord(entry);
+          if (recordRoute) currentRoute = recordRoute;
+
+          if (entry.type === "user/message") {
+            totalMessages += 1;
+            userMessages += 1;
+            continue;
+          }
+
+          if (entry.type === "assistant/message" || entry.type === "assistant/attempt") {
+            const data = entry.data || {};
+            const message = data.message || {};
+            const usage = entry.type === "assistant/message" ? normalizeUsage(data.usage) : dshUsageFromAttempt(data.stream);
+            const route = dshRouteFromMessage(message) || currentRoute;
+            const provider = route?.provider || "unknown";
+            const modelId = route?.model || "unknown";
+            const currentToolCalls = hasToolCallRecords
+              ? 0
+              : entry.type === "assistant/message"
+                ? dshToolCallCount(message)
+                : dshStreamToolCallCount(data.stream);
+            const event = {
+              seq: entry.seq,
+              timestamp,
+              kind: "assistant",
+              provider,
+              modelId,
+              model: `${provider}/${modelId}`,
+              usage: usage || zeroTotals(),
+              calls: 1,
+              toolCalls: currentToolCalls,
+              toolResults: 0,
+              hasUsage: Boolean(usage),
+            };
+            events.push(event);
+            assistantEventsByStep.set(dshStepKey(entry), event);
+            assistantMessages += 1;
+            if (entry.type === "assistant/message") totalMessages += 1;
+            if (!usage) missingUsage += 1;
+            continue;
+          }
+
+          if (entry.type === "tool/call") {
+            toolCalls += 1;
+            const assistantEvent = assistantEventsByStep.get(dshStepKey(entry));
+            if (assistantEvent) assistantEvent.toolCalls += 1;
+            continue;
+          }
+
+          if (entry.type === "tool/result") {
+            toolResults += 1;
+            totalMessages += 1;
+            const usage = normalizeUsage(entry.data?.usage);
+            events.push({
+              seq: entry.seq,
+              timestamp,
+              kind: "toolResult",
+              provider: "Tools",
+              modelId: "summaries",
+              model: "Tools / summaries",
+              usage: usage || zeroTotals(),
+              calls: 0,
+              toolCalls: 0,
+              toolResults: 1,
+              hasUsage: Boolean(usage),
+            });
+          }
+        }
+
+        const totals = createTotals();
+        for (const event of events) addTotals(totals, event.usage);
+        const cwd = header.cwd || file.webkitRelativePath || file.name;
+        const project = projectName(cwd);
+        for (const event of events) event.project = cwd;
+        const fallbackName = contentToText(firstUser?.data?.content) || header.id.slice(0, 12);
+
+        return {
+          id: header.id,
+          cwd,
+          project,
+          name: sessionName || shorten(fallbackName, 80),
+          relativePath: file.webkitRelativePath || file.name,
+          file,
+          fileTextSize: text.length,
+          firstAt,
+          lastAt,
+          totalMessages,
+          userMessages,
+          assistantMessages,
+          toolResults,
+          toolCalls,
+          missingUsage,
+          malformedLines,
+          totals,
+          events,
+          format: "dsh",
+          formatVersion: header.version,
+          header: includeEntries ? header : undefined,
+          entries: includeEntries ? entries : undefined,
+        };
+      }
+
+      async function readSessionText(file) {
+        if (!isZstdFile(file)) return file.text();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (!window.fzstd || typeof window.fzstd.decompress !== "function") {
+          throw new Error(t("zstdUnavailable"));
+        }
+        return new TextDecoder().decode(window.fzstd.decompress(bytes));
+      }
+
       async function parseSessionFile(file, includeEntries = false) {
-        const text = await file.text();
+        const text = await readSessionText(file);
         const lines = text.split(/\r?\n/);
         let header = null;
         const entries = [];
@@ -1153,6 +1501,10 @@
 
         if (!header || typeof header.id !== "string") {
           throw new Error(t("invalidSessionHeader"));
+        }
+
+        if (isDshSessionHeader(header)) {
+          return parseDshSession(header, entries, file, text, malformedLines, includeEntries);
         }
 
         const headerTimestamp = toTimestamp(header.timestamp);
@@ -1263,6 +1615,8 @@
           malformedLines,
           totals,
           events,
+          format: "pi",
+          formatVersion: header.version,
           header: includeEntries ? header : undefined,
           entries: includeEntries ? entries : undefined,
         };
@@ -1575,14 +1929,14 @@
           .map((part) => {
             if (!part || typeof part !== "object") return "";
             if (part.type === "text") return renderTextBlock(part.text || "");
-            if (part.type === "thinking") {
+            if (part.type === "thinking" || part.type === "reasoning") {
               return `<details class="rounded-box border border-secondary/25 bg-secondary/10 p-3 text-sm">
                 <summary class="cursor-pointer font-semibold text-secondary-content/75">${t("thinking")}</summary>
                 <div class="conversation-content mt-3 text-base-content/70">${escapeHtml(part.thinking || part.text || "")}</div>
               </details>`;
             }
-            if (part.type === "toolCall") {
-              const args = JSON.stringify(part.arguments ?? {}, null, 2);
+            if (part.type === "toolCall" || part.type === "tool-call") {
+              const args = typeof part.arguments === "string" ? part.arguments : JSON.stringify(part.arguments ?? {}, null, 2);
               return `<details class="rounded-box border border-base-300 bg-base-200 p-3 text-sm">
                 <summary class="cursor-pointer font-semibold">${escapeHtml(t("toolCall", { name: part.name || t("unknownTool") }))}</summary>
                 <pre class="conversation-content mt-3 overflow-x-auto text-xs text-base-content/65">${escapeHtml(args)}</pre>
@@ -1598,7 +1952,7 @@
       }
 
       function renderMessageEntry(entry) {
-        const message = entry.message || {};
+        const message = entry.message || entry.data?.message || entry.data || {};
         const timestamp = entryTimestamp(entry, null);
         if (message.role === "user") {
           return `<article class="ml-auto max-w-4xl">
@@ -1607,8 +1961,9 @@
           </article>`;
         }
         if (message.role === "assistant") {
-          const usage = normalizeUsage(message.usage) || zeroTotals();
-          const model = `${message.provider || "unknown"}/${message.responseModel || message.model || "unknown"}`;
+          const usage = entry.normalizedUsage || normalizeUsage(entry.usage || message.usage) || zeroTotals();
+          const source = message.source?.kind === "model" ? message.source : {};
+          const model = `${message.provider || source.provider || "unknown"}/${message.responseModel || message.model || source.model || "unknown"}`;
           const error = message.errorMessage ? `<div class="mt-3 rounded-field bg-error/10 p-3 text-sm text-error-content">${escapeHtml(message.errorMessage)}</div>` : "";
           return `<article class="mr-auto max-w-4xl">
             <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-base-content/45"><span class="font-semibold text-info">${t("assistant")}</span><span>${escapeHtml(model)}</span><time>${escapeHtml(formatDateTime(timestamp))}</time></div>
@@ -1628,7 +1983,64 @@
         return `<div class="mx-auto max-w-4xl rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/60">${escapeHtml(message.role || t("unknownMessage"))}：${escapeHtml(contentToText(message.content))}</div>`;
       }
 
+      function dshDetailUsage(entry) {
+        const event = state.detailData?.events?.find((candidate) => candidate.seq === entry.seq);
+        return event?.usage || null;
+      }
+
+      function renderDshEntry(entry) {
+        const data = entry.data || {};
+        const timestamp = entryTimestamp(entry, null);
+
+        if (entry.type === "user/message") {
+          return renderMessageEntry({ ...entry, message: data });
+        }
+        if (entry.type === "assistant/message") {
+          return renderMessageEntry({ ...entry, message: data.message || {}, usage: data.usage, normalizedUsage: dshDetailUsage(entry) });
+        }
+        if (entry.type === "tool/result") {
+          const message = data.message || {};
+          const toolName = data.toolName || message.toolName || data.callId || message.toolCallId || t("unnamedTool");
+          return `<details class="mx-auto max-w-4xl rounded-box border border-base-300 bg-base-200/70 p-3 text-sm">
+            <summary class="cursor-pointer font-semibold text-base-content/65">${t("toolResult")} · ${escapeHtml(toolName)} · ${escapeHtml(formatDateTime(timestamp))}</summary>
+            <div class="mt-3 leading-6">${renderContent(message.content) || `<span class="text-base-content/45">${t("emptyResult")}</span>`}</div>
+          </details>`;
+        }
+        if (entry.type === "assistant/attempt") {
+          const usage = dshDetailUsage(entry) || dshUsageFromAttempt(data.stream) || zeroTotals();
+          const failure = (data.stream || []).findLast?.((record) => record?.chunk?.type === "finish")?.chunk?.reason?.failure?.message;
+          return `<div class="mx-auto max-w-4xl rounded-box border border-warning/25 bg-warning/10 p-4 text-sm">
+            <div class="font-semibold text-warning-content">${t("assistantAttempt")} · ${escapeHtml(formatDateTime(timestamp))}</div>
+            ${failure ? `<div class="conversation-content mt-2 text-warning-content/75">${escapeHtml(failure)}</div>` : ""}
+            <div class="mt-3 text-xs text-warning-content/60">${renderDetailUsage(usage)}</div>
+          </div>`;
+        }
+        if (entry.type === "system/message") {
+          const message = data.message || {};
+          return `<details class="mx-auto max-w-4xl rounded-box border border-base-300 bg-base-200/70 p-3 text-sm">
+            <summary class="cursor-pointer font-semibold text-base-content/60">${t("systemMessage")} · ${escapeHtml(formatDateTime(timestamp))}</summary>
+            <div class="mt-3 leading-6">${renderContent(message.content) || `<span class="text-base-content/45">${t("emptyMessage")}</span>`}</div>
+          </details>`;
+        }
+        if (entry.type === "tool/call") {
+          const args = typeof data.arguments === "string" ? data.arguments : JSON.stringify(data.arguments ?? {}, null, 2);
+          return `<details class="mx-auto max-w-4xl rounded-box border border-base-300 bg-base-200 p-3 text-sm">
+            <summary class="cursor-pointer font-semibold">${escapeHtml(t("toolCall", { name: data.name || t("unknownTool") }))} · ${escapeHtml(formatDateTime(timestamp))}</summary>
+            <pre class="conversation-content mt-3 overflow-x-auto text-xs text-base-content/65">${escapeHtml(args)}</pre>
+          </details>`;
+        }
+        if (entry.type === "request/header") {
+          const route = dshRouteFromHeader(data.header);
+          return `<div class="mx-auto max-w-4xl text-center text-xs text-base-content/40">${escapeHtml(t("requestHeader", { route: route ? `${route.provider}/${route.model}` : t("unknownMessage") }))} · ${escapeHtml(formatDateTime(timestamp))}</div>`;
+        }
+        if (entry.type === "model/selection") {
+          return `<div class="mx-auto max-w-4xl text-center text-xs text-base-content/40">${escapeHtml(t("modelChanged", { provider: data.provider || t("unknownMessage"), model: data.model || t("unknownMessage") }))} · ${escapeHtml(formatDateTime(timestamp))}</div>`;
+        }
+        return `<div class="mx-auto max-w-4xl text-center text-xs text-base-content/35">${escapeHtml(entry.type || t("unknownType"))} · ${escapeHtml(formatDateTime(timestamp))}</div>`;
+      }
+
       function renderEntry(entry) {
+        if (entry.type?.includes("/")) return renderDshEntry(entry);
         if (entry.type === "message") return renderMessageEntry(entry);
         if (entry.type === "compaction") {
           const usage = normalizeUsage(entry.usage);
@@ -1672,6 +2084,10 @@
         return path.reverse();
       }
 
+      function dshDisplayableEntries(entries) {
+        return entries.filter((entry) => ["user/message", "assistant/message", "assistant/attempt", "tool/result"].includes(entry.type));
+      }
+
       function setDetailMode(mode) {
         const nextMode = mode === "all" ? "all" : "active";
         elements.detailMode.dataset.mode = nextMode;
@@ -1685,7 +2101,11 @@
 
       function renderDetailConversation() {
         if (!state.detailData) return;
-        const entries = elements.detailMode.dataset.mode === "active" ? activeBranchEntries(state.detailData.entries || []) : state.detailData.entries || [];
+        const entries = elements.detailMode.dataset.mode === "active"
+          ? state.detailData.format === "dsh"
+            ? dshDisplayableEntries(state.detailData.entries || [])
+            : activeBranchEntries(state.detailData.entries || [])
+          : state.detailData.entries || [];
         elements.conversationBody.innerHTML = entries.length
           ? entries.map(renderEntry).join("")
           : `<div class="py-16 text-center text-base-content/45">${t("noDisplayableMessages")}</div>`;
@@ -1716,6 +2136,7 @@
 
         try {
           const parsed = await parseSessionFile(session.file, true);
+          if (parsed.format === "dsh" && state.pricingCatalog) applyDshPricing([parsed]);
           if (requestId !== state.detailRequestId) return;
           state.detailData = parsed;
           elements.detailSummary.textContent = detailSummaryText(session);
@@ -1758,6 +2179,22 @@
             }
           } catch (error) {
             state.issues.push({ key: "invalidSessionFile", values: { file: file.webkitRelativePath || file.name, error: error.message } });
+          }
+        }
+
+        const dshSessions = state.sessions.filter((session) => session.format === "dsh");
+        if (dshSessions.length) {
+          elements.progressLabel.textContent = t("loadingPricing");
+          elements.progressValue.textContent = "100%";
+          elements.progressBar.style.width = "100%";
+          try {
+            await loadPricingCatalog();
+            const unknownModels = applyDshPricing(dshSessions);
+            if (unknownModels.size) {
+              state.issues.push({ key: "pricingUnknown", values: { count: formatTokens(unknownModels.size) } });
+            }
+          } catch {
+            state.issues.push({ key: "pricingUnavailable" });
           }
         }
 
